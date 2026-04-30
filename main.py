@@ -14,7 +14,7 @@ from ctypes import wintypes
 class GameLauncher:
     def __init__(self, root):
         self.root = root
-        self.root.title("Game Station Tracker")
+        self.root.title("TimeGManagment")
         self.root.geometry("1000x750")
         
         if getattr(sys, 'frozen', False):
@@ -22,7 +22,7 @@ class GameLauncher:
         else:
             self.base_path = os.path.dirname(os.path.abspath(__file__))
             
-        self.db_file = os.path.join(self.base_path, "games_data.json")
+        self.db_file = os.path.join(self.base_path, "data.json")
         self.games = self.load_data()
         self.running_processes = {}
 
@@ -52,11 +52,11 @@ class GameLauncher:
         self.top_bar.pack(fill=tk.X, padx=0, pady=0)
         self.top_bar.pack_propagate(False)
 
-        title_lbl = tk.Label(self.top_bar, text="МОЯ БИБЛИОТЕКА", font=("Segoe UI", 18, "bold"), bg="#1a1d2b", fg="#ffffff")
+        title_lbl = tk.Label(self.top_bar, text="My Library", font=("Segoe UI", 18, "bold"), bg="#1a1d2b", fg="#ffffff")
         title_lbl.pack(side=tk.LEFT, padx=30, pady=20)
         
         self.add_btn = tk.Button(
-            self.top_bar, text="+ ДОБАВИТЬ ИГРУ", font=("Segoe UI", 10, "bold"),
+            self.top_bar, text="+ ADD GAME", font=("Segoe UI", 10, "bold"),
             bg="#24293e", fg="#00d4ff", activebackground="#00d4ff", activeforeground="#ffffff",
             relief="flat", bd=0, padx=20, cursor="hand2", command=self.add_game
         )
@@ -110,7 +110,7 @@ class GameLauncher:
         return ImageTk.PhotoImage(img)
 
     def add_game(self):
-        file_path = filedialog.askopenfilename(filetypes=[("Программы", "*.exe")])
+        file_path = filedialog.askopenfilename(filetypes=[("Programs", "*.exe")])
         if not file_path: return
         game_name = os.path.splitext(os.path.basename(file_path))[0]
         if any(g['path'] == file_path for g in self.games): return
@@ -121,7 +121,7 @@ class GameLauncher:
     def format_time(self, seconds):
         h = seconds // 3600
         m = (seconds % 3600) // 60
-        if h > 0: return f"{h} ч. {m} мин."
+        if h > 0: return f"{h} h. {m} m."
         return f"{m} мин."
 
     def refresh_grid(self):
@@ -154,11 +154,11 @@ class GameLauncher:
             
             if is_run:
                 play_bg = "#80b3ff"
-                play_text = "ЗАПУЩЕНО"
+                play_text = "RUNNING"
                 play_state = "disabled"
             else:
                 play_bg = "#0066ff"
-                play_text = "ИГРАТЬ"
+                play_text = "PLAY"
                 play_state = "normal"
             
             play_btn = tk.Button(
@@ -193,7 +193,7 @@ class GameLauncher:
             self.refresh_grid()
             threading.Thread(target=self.track_time, args=(proc, exe_path), daemon=True).start()
         except Exception as e:
-            messagebox.showerror("Ошибка", str(e))
+            messagebox.showerror("Error", str(e))
 
     def track_time(self, proc, exe_path):
         start = time.time()
