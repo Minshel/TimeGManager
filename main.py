@@ -143,7 +143,7 @@ class GameLauncher:
             tk.Label(info, text=game['name'].upper(), font=("Segoe UI", 13, "bold"), bg="#1a1d2b", fg="#ffffff").pack(anchor="w")
             
             status_color = "#00d4ff" if game['path'] in self.running_processes else "#888888"
-            time_txt = f"ВРЕМЯ В ИГРЕ: {self.format_time(game['time_played'])}"
+            time_txt = f"You played: {self.format_time(game['time_played'])}"
             time_lbl = tk.Label(info, text=time_txt, font=("Segoe UI", 9), bg="#1a1d2b", fg=status_color)
             time_lbl.pack(anchor="w", pady=(5, 0))
 
@@ -172,7 +172,7 @@ class GameLauncher:
             play_btn.pack(side=tk.LEFT, padx=10)
 
             del_btn = tk.Button(
-                btns, text="УДАЛИТЬ", 
+                btns, text="DELETE", 
                 font=("Segoe UI", 10, "bold"),
                 bg="#ff3333", fg="white", activebackground="#cc0000", activeforeground="white",
                 relief="flat", bd=0, padx=15, pady=8, cursor="hand2",
