@@ -14,7 +14,7 @@ from ctypes import wintypes
 class GameLauncher:
     def __init__(self, root):
         self.root = root
-        self.root.title("TimeGManagment")
+        self.root.title("TimeGManager")
         self.root.geometry("1000x750")
         
         if getattr(sys, 'frozen', False):
