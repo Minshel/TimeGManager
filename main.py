@@ -23,7 +23,33 @@ class GameLauncher:
             self.base_path = os.path.dirname(os.path.abspath(__file__))
             
         self.db_file = os.path.join(self.base_path, "data.json")
-        self.games = self.load_data()
+        
+        self.translations = {
+            "EN": {
+                "library": "My Library",
+                "add": "+ ADD GAME",
+                "played": "You played:",
+                "play": "PLAY",
+                "running": "RUNNING",
+                "delete": "DELETE",
+                "h": "h.", "m": "m.", "min": "min.",
+                "Programs": "Programs"
+            },
+            "RU": {
+                "library": "Моя Библиотека",
+                "add": "+ ДОБАВИТЬ ИГРУ",
+                "played": "Вы играли:",
+                "play": "ИГРАТЬ",
+                "running": "ЗАПУЩЕНО",
+                "delete": "УДАЛИТЬ",
+                "h": "ч.", "m": "м.", "min": "мин.",
+                "Programs": "Программы"
+            }
+        }
+
+        data = self.load_data()
+        self.games = data.get("games", [])
+        self.lang = data.get("lang", "EN")
         self.running_processes = {}
 
         self.setup_ui()
@@ -33,17 +59,52 @@ class GameLauncher:
         if os.path.exists(self.db_file):
             try:
                 with open(self.db_file, "r", encoding="utf-8") as f:
-                    return json.load(f)
+                    content = json.load(f)
+                    if isinstance(content, list):
+                        return {"games": content, "lang": "EN"}
+                    if "lang" not in content:
+                        content["lang"] = "EN"
+                    return content
             except:
-                return []
-        return []
+                return {"games": [], "lang": "EN"}
+        return {"games": [], "lang": "EN"}
 
     def save_data(self):
         try:
             with open(self.db_file, "w", encoding="utf-8") as f:
-                json.dump(self.games, f, indent=4, ensure_ascii=False)
+                json.dump({"games": self.games, "lang": self.lang}, f, indent=4, ensure_ascii=False)
         except Exception as e:
             print(f"Error saving: {e}")
+
+    def create_flag_icon(self, country):
+        img = Image.new('RGBA', (30, 20), color=(0,0,0,0))
+        draw = ImageDraw.Draw(img)
+        if country == "RU":
+            draw.rectangle([0, 0, 30, 6], fill="#FFFFFF")
+            draw.rectangle([0, 7, 30, 13], fill="#0039A6")
+            draw.rectangle([0, 14, 30, 20], fill="#D52B1E")
+        else:
+            draw.rectangle([0, 0, 30, 20], fill="#00247D")
+            draw.line([0,0,30,20], fill="#FFFFFF", width=3)
+            draw.line([0,20,30,0], fill="#FFFFFF", width=3)
+            draw.line([0,0,30,20], fill="#CF142B", width=1)
+            draw.line([0,20,30,0], fill="#CF142B", width=1)
+            draw.rectangle([12, 0, 18, 20], fill="#FFFFFF")
+            draw.rectangle([0, 7, 30, 13], fill="#FFFFFF")
+            draw.rectangle([13, 0, 17, 20], fill="#CF142B")
+            draw.rectangle([0, 8, 30, 12], fill="#CF142B")
+        return ImageTk.PhotoImage(img)
+
+    def change_lang(self, new_lang):
+        self.lang = new_lang
+        self.save_data()
+        self.update_ui_text()
+        self.refresh_grid()
+
+    def update_ui_text(self):
+        t = self.translations[self.lang]
+        self.title_lbl.config(text=t["library"])
+        self.add_btn.config(text=t["add"])
 
     def setup_ui(self):
         self.root.configure(bg="#0f111a")
@@ -52,11 +113,25 @@ class GameLauncher:
         self.top_bar.pack(fill=tk.X, padx=0, pady=0)
         self.top_bar.pack_propagate(False)
 
-        title_lbl = tk.Label(self.top_bar, text="My Library", font=("Segoe UI", 18, "bold"), bg="#1a1d2b", fg="#ffffff")
-        title_lbl.pack(side=tk.LEFT, padx=30, pady=20)
+        self.title_lbl = tk.Label(self.top_bar, text=self.translations[self.lang]["library"], 
+                                 font=("Segoe UI", 18, "bold"), bg="#1a1d2b", fg="#ffffff")
+        self.title_lbl.pack(side=tk.LEFT, padx=(30, 10), pady=20)
+
+        self.flag_frame = tk.Frame(self.top_bar, bg="#1a1d2b")
+        self.flag_frame.pack(side=tk.LEFT, pady=20)
+
+        self.img_ru = self.create_flag_icon("RU")
+        self.btn_ru = tk.Button(self.flag_frame, image=self.img_ru, bg="#1a1d2b", activebackground="#24293e", 
+                               bd=0, cursor="hand2", command=lambda: self.change_lang("RU"))
+        self.btn_ru.pack(side=tk.LEFT, padx=5)
+
+        self.img_en = self.create_flag_icon("EN")
+        self.btn_en = tk.Button(self.flag_frame, image=self.img_en, bg="#1a1d2b", activebackground="#24293e", 
+                               bd=0, cursor="hand2", command=lambda: self.change_lang("EN"))
+        self.btn_en.pack(side=tk.LEFT, padx=5)
         
         self.add_btn = tk.Button(
-            self.top_bar, text="+ ADD GAME", font=("Segoe UI", 10, "bold"),
+            self.top_bar, text=self.translations[self.lang]["add"], font=("Segoe UI", 10, "bold"),
             bg="#24293e", fg="#00d4ff", activebackground="#00d4ff", activeforeground="#ffffff",
             relief="flat", bd=0, padx=20, cursor="hand2", command=self.add_game
         )
@@ -110,7 +185,7 @@ class GameLauncher:
         return ImageTk.PhotoImage(img)
 
     def add_game(self):
-        file_path = filedialog.askopenfilename(filetypes=[("Programs", "*.exe")])
+        file_path = filedialog.askopenfilename(filetypes=[(f"{self.translations[self.lang]["Programs"]}", "*.exe")])
         if not file_path: return
         game_name = os.path.splitext(os.path.basename(file_path))[0]
         if any(g['path'] == file_path for g in self.games): return
@@ -119,14 +194,17 @@ class GameLauncher:
         self.refresh_grid()
 
     def format_time(self, seconds):
+        t = self.translations[self.lang]
         h = seconds // 3600
         m = (seconds % 3600) // 60
-        if h > 0: return f"{h} h. {m} m."
-        return f"{m} мин."
+        if h > 0: return f"{h} {t['h']} {m} {t['m']}"
+        return f"{m} {t['min']}"
 
     def refresh_grid(self):
         for widget in self.scrollable_frame.winfo_children():
             widget.destroy()
+
+        t = self.translations[self.lang]
 
         for index, game in enumerate(self.games):
             card = tk.Frame(self.scrollable_frame, bg="#1a1d2b", padx=15, pady=15, highlightthickness=0)
@@ -143,7 +221,7 @@ class GameLauncher:
             tk.Label(info, text=game['name'].upper(), font=("Segoe UI", 13, "bold"), bg="#1a1d2b", fg="#ffffff").pack(anchor="w")
             
             status_color = "#00d4ff" if game['path'] in self.running_processes else "#888888"
-            time_txt = f"You played: {self.format_time(game['time_played'])}"
+            time_txt = f"{t['played']} {self.format_time(game['time_played'])}"
             time_lbl = tk.Label(info, text=time_txt, font=("Segoe UI", 9), bg="#1a1d2b", fg=status_color)
             time_lbl.pack(anchor="w", pady=(5, 0))
 
@@ -154,11 +232,11 @@ class GameLauncher:
             
             if is_run:
                 play_bg = "#80b3ff"
-                play_text = "RUNNING"
+                play_text = t["running"]
                 play_state = "disabled"
             else:
                 play_bg = "#0066ff"
-                play_text = "PLAY"
+                play_text = t["play"]
                 play_state = "normal"
             
             play_btn = tk.Button(
@@ -172,7 +250,7 @@ class GameLauncher:
             play_btn.pack(side=tk.LEFT, padx=10)
 
             del_btn = tk.Button(
-                btns, text="DELETE", 
+                btns, text=t["delete"], 
                 font=("Segoe UI", 10, "bold"),
                 bg="#ff3333", fg="white", activebackground="#cc0000", activeforeground="white",
                 relief="flat", bd=0, padx=15, pady=8, cursor="hand2",
