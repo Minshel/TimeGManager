@@ -17,7 +17,7 @@ import pystray
 from pystray import MenuItem as item
 from pynput import keyboard
 from datetime import datetime
-import pygame
+import winsound
 
 BUILD_VERSION = "1.2.0"
 
@@ -85,13 +85,7 @@ class GameLauncher(ctk.CTk):
         self._offsetx = 0
         self._offsety = 0
         self.listener = None
-        self.screenshot_sound = None
-        
-        # Initialize pygame mixer for sound
-        try:
-            pygame.mixer.init()
-        except:
-            pass
+        self.screenshot_sound_file = None
         
         self.title("TimeGManager")
         self.geometry("1100x800")
@@ -473,17 +467,18 @@ class GameLauncher(ctk.CTk):
             print(f"Screenshot error: {e}")
 
     def play_screenshot_sound(self):
-        """Download and play screenshot sound"""
+        """Download and play screenshot sound using Windows built-in winsound"""
         try:
-            if not self.screenshot_sound:
+            if not self.screenshot_sound_file:
+                # Download sound file
                 res = requests.get("https://www.myinstants.com/media/sounds/iphone-screenshot.mp3", timeout=5)
-                self.screenshot_sound = BytesIO(res.content)
-                self.screenshot_sound.seek(0)
-            else:
-                self.screenshot_sound.seek(0)
+                temp_sound = os.path.join(os.path.expanduser("~"), "AppData", "Local", "Temp", "screenshot.mp3")
+                with open(temp_sound, 'wb') as f:
+                    f.write(res.content)
+                self.screenshot_sound_file = temp_sound
             
-            pygame.mixer.music.load(self.screenshot_sound)
-            pygame.mixer.music.play()
+            # Play sound using winsound
+            winsound.PlaySound(self.screenshot_sound_file, winsound.SND_FILENAME | winsound.SND_ASYNC)
         except Exception as e:
             print(f"Sound playback error: {e}")
 
