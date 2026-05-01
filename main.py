@@ -197,7 +197,7 @@ class GameLauncher(ctk.CTk):
         self.title_bar.bind("<Button-1>", self.click_title_bar)
         self.title_bar.bind("<B1-Motion>", self.drag_title_bar)
 
-        self.title_label = ctk.CTkLabel(self.title_bar, text=f"TimeGManager v{BUILD_VERSION}", font=("Segoe UI", 11), text_color=self.colors["text_sec"])
+        self.title_label = ctk.CTkLabel(self.title_bar, text=f"TimeGManager [v{BUILD_VERSION}]", font=("Segoe UI", 11), text_color=self.colors["text_sec"])
         self.title_label.pack(side="left", padx=15)
         self.title_label.bind("<Button-1>", self.click_title_bar)
         self.title_label.bind("<B1-Motion>", self.drag_title_bar)
