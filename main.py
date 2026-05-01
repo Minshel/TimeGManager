@@ -16,7 +16,7 @@ from ctypes import wintypes
 import pystray
 from pystray import MenuItem as item
 
-BUILD_VERSION = "1.2.0"
+BUILD_VERSION = "1.2.2"
 
 ctk.set_appearance_mode("Dark")
 
@@ -124,7 +124,6 @@ class GameLauncher(ctk.CTk):
             self.icons_cache[icon_key] = ctk_img
             return ctk_img
         except:
-            # Fallback icon
             img = Image.new("RGBA", (size, size), (0,0,0,0))
             draw = ImageDraw.Draw(img)
             draw.rounded_rectangle((0,0,size,size), 15, fill=self.colors["accent"])
@@ -416,5 +415,9 @@ class GameLauncher(ctk.CTk):
         ctk.CTkButton(set_win, text=t["save"], width=350, height=45, fg_color=self.colors["accent"], text_color="#000000", hover_color=self.colors["hover"], font=("Segoe UI", 12, "bold"), command=apply).pack(pady=30)
 
 if __name__ == "__main__":
+    mutex_name = "Global\\TimeGManager_Unique_Mutex_120"
+    mutex = ctypes.windll.kernel32.CreateMutexW(None, False, mutex_name)
+    if ctypes.windll.kernel32.GetLastError() == 183:
+        sys.exit(0)
     app = GameLauncher()
     app.mainloop()
